@@ -1,0 +1,15 @@
+# Ignore everything by default
+*
+
+!Dockerfile
+!requirements.txt
+!README.md
+!deploy/
+!deploy/deploy.pya
+!.gitignore
+
+# Ignore
+credentials.json
+.env
+deploy/env.yaml
+venv/

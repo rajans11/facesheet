@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>Face Sheet</title>
+  <link href="https://fonts.cdnfonts.com/css/century-gothic-paneuropean" rel="stylesheet">
+<style>
+  body {
+    font-family: 'Century Gothic Paneuropean', "Century Gothic", Arial, sans-serif;
+    text-align: center;
+    margin: 40px;
+  }
+
+  .title {
+      font-size: {{settings_data.TitleFontSize}};
+      font-weight: bold;
+  }
+
+  .section-title {
+    font-size: 18px;
+    font-weight: bold;
+    margin-top: 10px;
+    margin-bottom: 10px;
+  }
+
+  .grid {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    max-width: 1080px;
+    margin: 0 auto;
+  }
+
+  .card,
+  .card-headline {
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-start;
+    align-items: center;
+    overflow: hidden;
+    box-sizing: border-box;
+    background-color: white; /* optional for visual clarity */
+    outline: 1.5px solid black;
+  }
+
+  .card {
+    width: 140px;
+    height: 250px;
+  }
+
+  .card-headline {
+    width: 160px;
+    height: 280px;
+  }
+
+  .grid-headline {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    max-width: 950px;
+    margin: 0 auto;
+  }
+
+  .card img,
+  .card-headline img {
+    object-fit: cover;
+    box-sizing: border-box;
+    flex-shrink: 0;
+    padding: 7px;
+    margin-bottom: 7px;
+    border-bottom: solid black 1.5px;
+  }
+
+  .card img {
+    width: 140px;
+    height: 150px;
+  }
+
+  .card-headline img {
+    width: 160px;
+    height: 190px;
+  }
+
+  .data {
+    margin-top: 5px;
+    padding: 3px;
+  }
+
+  .name, .role {
+    width: 100%;
+    box-sizing: border-box;
+  }
+
+  .name {
+    font-weight: 700;
+    text-decoration: none;
+    font-size: 10pt;
+  }
+
+  .role {
+    font-size: 9pt;
+    text-align: center;
+  }
+
+  .page-break {
+    page-break-after: always;
+  }
+
+  .logo-image {
+    width: {{ settings_data.LogoWidth }};
+    height: {{ settings_data.LogoHeight }};
+    margin-bottom: 10px;
+  }
+  
+</style>
+</head>
+<body>
+  <div class="title">{{ settings_data.Title }}</div>
+  <div class="logo">
+    <img src="{{ logo_path }}" alt="Logo" class="logo-image">
+  </div>
+  {% for category, people in grouped_people.items() %}
+    <div class="category-group page-break">
+      {% if category != 'Headline' and category != 'N/A' %}
+        <div class="section-title">{{ category }}</div>
+      {% endif %}
+      <div class="{% if category == 'Headline' %}grid-headline{% else %}grid{% endif %}">
+        {% for person in people %}
+        <div class="{% if category == 'Headline' %}card-headline{% else %}card{% endif %}">
+          <img src="{{ person['Image File'] }}" alt="{{ person['Name'] }}">
+          <div class="data">
+            <div class="name">{{ person['Name'] }}</div>
+            <div class="role">{{ person['Title'] }}</div>
+            <div class="role">{{ person['Show'] }}</div>
+        </div>
+        </div>
+        {% endfor %}
+      </div>
+    </div>
+  {% endfor %}
+</body>
+</html>
+
+

@@ -1,4 +1,5 @@
 import os
+import time
 import unicodedata
 from dotenv import load_dotenv
 
@@ -11,13 +12,21 @@ load_dotenv()
 # Drive service
 drive_service = get_drive_service()
 
-# Global index
+# Global index with TTL-based cache (5 minutes)
 _image_index = {}
+_index_folder_id = None
+_index_built_at = 0.0
+_INDEX_TTL = 300
 
 def initialize_image_index(PARENT_FOLDER_ID):
     """Fetch all image names from 'images' subfolder in Google Drive and normalize to lowercase."""
-    global _image_index
-    _image_index = {}  # Reset index each run
+    global _image_index, _index_folder_id, _index_built_at
+
+    if _image_index and PARENT_FOLDER_ID == _index_folder_id and (time.time() - _index_built_at) < _INDEX_TTL:
+        log_message(f"✅ Using cached image index ({len(_image_index)} images).")
+        return
+
+    _image_index = {}
     log_message("🔄 Initializing image index from Google Drive 'images' subfolder...")
 
     try:
@@ -49,12 +58,14 @@ def initialize_image_index(PARENT_FOLDER_ID):
                 name = item['name']
                 file_id = item['id']
                 norm_key = unicodedata.normalize('NFKD', name).lower()
-                _image_index[norm_key] = f"https://lh3.googleusercontent.com/d/{file_id}=s750?authuser=0"
+                _image_index[norm_key] = f"https://lh3.googleusercontent.com/d/{file_id}=s400?authuser=0"
 
             page_token = response.get('nextPageToken')
             if not page_token:
                 break
 
+        _index_folder_id = PARENT_FOLDER_ID
+        _index_built_at = time.time()
         log_message(f"✅ Indexed {len(_image_index)} images from 'images' subfolder.")
     except Exception as e:
         error_message = f"⚠️ Error indexing images from Drive: {e}"

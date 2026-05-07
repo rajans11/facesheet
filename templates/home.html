@@ -8,263 +8,433 @@
   <script src="https://cdn.tailwindcss.com"></script>
   <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&display=swap" rel="stylesheet" />
   <style>
-    body {
-      font-family: 'Poppins', sans-serif;
+    body { font-family: 'Poppins', sans-serif; }
+    @keyframes progress-slide {
+      0% { transform: translateX(-100%); }
+      100% { transform: translateX(400%); }
     }
-    .sheet-card {
-      min-height: 88px;
-    }
-    .sheet-card:hover {
-      background-color: #1f1f1f;
-    }
+    .progress-indeterminate { animation: progress-slide 1.6s ease-in-out infinite; width: 25%; }
   </style>
 </head>
-<body class="bg-black text-white min-h-screen flex flex-col justify-between">
+<body class="bg-black text-white min-h-screen flex flex-col">
 
   <!-- Header -->
-  <header class="w-full px-6 pt-10 pb-6 flex flex-col items-center bg-black text-white">
+  <header class="w-full px-6 pt-6 pb-6 flex flex-col items-center relative">
+    <!-- Back button: top-left, only shown when not on selection screen -->
+    <button id="global-back-btn"
+      class="hidden absolute top-6 left-6 inline-flex items-center gap-2 text-sm text-white border border-white px-3 py-1.5 rounded-lg hover:bg-white hover:text-black transition">
+      <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+      </svg>
+      Back
+    </button>
     <a href="https://www.multitudemedia.co.uk/">
-      <img
-        src="https://cdn.prod.website-files.com/637fa47ef7a2b2f6f809adb2/63eb5a3da5edc01d53e61edf_mm-reversed.svg"
-        alt="Multitude Media Logo"
-        class="h-20 invert"
-        style="filter: brightness(0) invert(1);"
-      />
+      <img src="https://cdn.prod.website-files.com/637fa47ef7a2b2f6f809adb2/63eb5a3da5edc01d53e61edf_mm-reversed.svg"
+        alt="Multitude Media Logo" class="h-20" style="filter: brightness(0) invert(1);" />
     </a>
-    <div class="text-xs font-light mt-2">
-      <span class="underline text-white">{{ email }}</span>
-    </div>
-    <h2 class="text-center text-2xl font-semibold mt-6">Facesheet Generator</h2>
+    <div class="text-xs font-light mt-2 text-white/60">{{ email }}</div>
+    <h2 class="text-2xl font-semibold mt-6">Facesheet Generator</h2>
     <div class="w-24 border-b-2 border-white mt-2"></div>
   </header>
 
-  <!-- Main Content -->
-  <main class="flex-1 w-full max-w-4xl mx-auto">
-    <div class="container">
+  <main class="flex-1 w-full max-w-5xl mx-auto px-4 pb-16">
+
+    <!-- ── STEP 1: Sheet Selection ── -->
+    <div id="view-select">
       {% if sheets|length == 0 %}
-        <p class="text-sm mt-10 inline-flex items-center justify-center">
-          No Google Sheets found.
-          <a href='https://drive.google.com/drive/folders/{{parent}}' target="_blank" class="inline-flex items-center text-sm text-white">
-            <img src="https://kodular-community.s3.dualstack.eu-west-1.amazonaws.com/original/3X/3/b/3b1cb1d1842e4ecba35ba52e22c3b808d6bddde5.jpeg" alt="Google Drive Icon" class="w-5 h-5 ml-2">
-          </a>  
-        </p>
+        <div class="mt-8 text-sm text-white/40 flex items-center gap-2">
+          No sheets found in
+          <a href="https://drive.google.com/drive/folders/{{parent}}" target="_blank" class="hover:opacity-100 opacity-60 transition">
+            <img src="https://kodular-community.s3.dualstack.eu-west-1.amazonaws.com/original/3X/b/3b1cb1d1842e4ecba35ba52e22c3b808d6bddde5.jpeg" class="w-5 h-5 inline">
+          </a>
+        </div>
       {% else %}
-        <p class="text-sm mt-10 inline-flex items-center justify-center">
-          Choose a Google Sheet below to convert
-          <a href='https://drive.google.com/drive/folders/{{parent}}' target="_blank" class="inline-flex items-center text-sm text-white">
-            <img src="https://kodular-community.s3.dualstack.eu-west-1.amazonaws.com/original/3X/3/b/3b1cb1d1842e4ecba35ba52e22c3b808d6bddde5.jpeg" alt="Google Drive Icon" class="w-5 h-5 ml-2">
-          </a>  
-          </p>
+        <!-- Controls -->
+        <div class="mt-8 flex items-center gap-2">
+          <div class="relative flex-1">
+            <svg xmlns="http://www.w3.org/2000/svg" class="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-white/20 pointer-events-none" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-4.35-4.35M17 11A6 6 0 1 1 5 11a6 6 0 0 1 12 0z"/>
+            </svg>
+            <input id="sheet-search" type="text" placeholder="Search sheets…"
+              class="w-full bg-white/5 border border-white/10 rounded-lg pl-9 pr-4 py-2 text-sm text-white placeholder-white/20 focus:outline-none focus:border-white/30 transition"/>
+          </div>
+          <button id="sort-btn"
+            class="flex items-center gap-1.5 border border-white/10 rounded-lg px-3 py-2 text-xs text-white/40 hover:text-white/70 hover:border-white/30 transition whitespace-nowrap">
+            <svg xmlns="http://www.w3.org/2000/svg" class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 4h13M3 8h9M3 12h5m10 4v-8m0 0l-3 3m3-3l3 3"/>
+            </svg>
+            <span id="sort-label">Date</span>
+          </button>
+          <a href="https://drive.google.com/drive/folders/{{parent}}" target="_blank"
+            class="border border-white/10 rounded-lg p-2 text-white/30 hover:text-white/70 hover:border-white/30 transition" title="Open Drive folder">
+            <img src="https://kodular-community.s3.dualstack.eu-west-1.amazonaws.com/original/3X/3/b/3b1cb1d1842e4ecba35ba52e22c3b808d6bddde5.jpeg" class="w-4 h-4">
+          </a>
+        </div>
+
+        <!-- List -->
+        <div id="sheet-list" class="mt-3 flex flex-col divide-y divide-white/10 border border-white/10 rounded-xl overflow-hidden"></div>
       {% endif %}
     </div>
-    
-    <style>
-      .container {
-        display: flex;
-        justify-content: center; /* Center horizontally */
-      }
-    </style>
 
-    <!-- Sheet Cards -->
-    <div id="sheet-container" class="mt-6 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 place-items-center transition-all duration-300">
-      {% for sheet in sheets %}
-      <div class="sheet-card bg-white text-black rounded-xl p-4 shadow transition-all duration-200 cursor-pointer w-full max-w-xs hover:bg-white" style="align-content: center;"
-            data-sheet-id="{{ sheet.id }}"
-            data-sheet-name="{{ sheet.name }}">
-        <div class="flex items-center gap-3">
-          <img src="https://www.svgrepo.com/show/504430/google-sheets.svg" class="w-12 h-12" alt="Sheet Icon" />
-          <div class="min-w-0">
-            <div class="font-semibold text-sm break-words">{{ sheet.name }}</div>
-            <div class="text-xs text-black/50">{{ sheet.modifiedTime }}</div>
-          </div>
-        </div>
-      </div>
-      {% endfor %}
-    </div>
+    <!-- ── STEP 2: Sheet Selected ── -->
+    <div id="view-ready" class="hidden">
 
-    <!-- Selected Info -->
-    <div id="selected-info" class="text-center mt-10 mb-6 text-white text-lg font-light hidden animate-pulse"></div>
-
-    <!-- Generate Button -->
-    <div id="generate-controls" class="flex flex-col items-center space-y-4 hidden mt-10">
-      <div class="w-full max-w-xs">
+      <!-- Header row: title + generate -->
+      <div class="mt-8 flex items-center justify-between gap-4">
+        <h3 id="selected-sheet-title" class="text-sm font-semibold text-white truncate flex-1"></h3>
         <button id="generate-btn"
-        class="w-full max-w-xs bg-white text-black px-5 py-6 rounded-xl hover:bg-white transition disabled:opacity-50 font-semibold text-sm shadow-lg"
-        disabled>
-          Generate Facesheet
+          class="flex-shrink-0 bg-white text-black px-5 py-2.5 rounded-xl font-semibold text-sm shadow-lg hover:bg-white/90 transition disabled:opacity-40">
+          Generate
         </button>
       </div>
-      <button id="undo-btn"
-              class="text-sm text-white/70 hover:text-white transition underline">
-        Undo Selection
-      </button>
+
+      <!-- Spreadsheet embedded (always visible) -->
+      <div class="mt-4 w-full rounded-xl overflow-hidden border border-white/10 shadow-2xl" style="height: 75vh;">
+        <iframe id="sheet-iframe" src="" class="w-full h-full border-0"></iframe>
+      </div>
     </div>
 
-    <!-- Log Output -->
-    <div id="log-output-container" class="mt-12 hidden"> <h2 class="text-sm font-medium text-white mb-2">Live output:</h2>
-      <pre id="log-output"
-          class="bg-white text-black p-4 h-80 overflow-y-scroll rounded font-mono text-sm shadow-inner whitespace-pre-wrap">
-      </pre>
+    <!-- ── STEP 3: Generating ── -->
+    <div id="view-generating" class="hidden">
+      <div class="mt-8 flex flex-col items-center gap-6">
+        <div class="w-full max-w-md">
+          <p id="progress-status" class="text-sm text-white/60 text-center mb-3">Generating your facesheet...</p>
+          <div class="w-full bg-white/10 rounded-full h-1 overflow-hidden">
+            <div class="progress-indeterminate h-1 bg-white rounded-full"></div>
+          </div>
+        </div>
+
+        <button id="cancel-btn"
+          class="text-sm text-white/40 hover:text-white/70 transition underline">
+          Cancel
+        </button>
+      </div>
     </div>
 
-    <!-- PDF Link -->
-    <div id="pdf-link" class="mt-8 hidden text-center opacity-0 transition-opacity duration-500"></div>
+    <!-- ── STEP 4: Complete ── -->
+    <div id="view-complete" class="hidden">
+      <div class="mt-8 flex flex-col items-center gap-4">
+
+        <!-- Action row -->
+        <div class="flex flex-wrap justify-center gap-3">
+          <button id="generate-again-btn"
+            class="inline-flex items-center gap-2 bg-white text-black px-5 py-3 rounded-xl font-semibold text-sm shadow hover:bg-white/90 transition">
+            <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+            </svg>
+            Generate Again
+          </button>
+          <a id="pdf-drive-link" href="#" target="_blank"
+            class="group inline-flex items-center gap-2 border border-white text-white hover:bg-white hover:text-black px-5 py-3 rounded-xl font-medium text-sm transition">
+            Open in Google Drive
+            <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4 transition-transform group-hover:translate-x-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7l5 5m0 0l-5 5m5-5H6" />
+            </svg>
+          </a>
+          <button id="edit-sheet-complete-btn"
+            class="inline-flex items-center gap-2 text-sm text-white/60 hover:text-white border border-white/20 hover:border-white/60 px-4 py-3 rounded-xl transition">
+            <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+            </svg>
+            <span id="edit-sheet-complete-label">Edit Spreadsheet</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- Sheet editor (complete view) -->
+      <div id="sheet-editor-complete" class="hidden mt-6 w-full rounded-xl overflow-hidden border border-white/10 shadow-2xl" style="height: 75vh;">
+        <iframe id="sheet-iframe-complete" src="" class="w-full h-full border-0"></iframe>
+      </div>
+
+      <!-- PDF Preview -->
+      <div class="mt-6">
+        <p class="text-xs text-white/30 mb-2">Preview — <span class="text-white/50">scroll down for logs</span></p>
+        <div class="w-full rounded-xl overflow-hidden shadow-2xl border border-white/10" style="height: 80vh;">
+          <iframe id="pdf-preview" src="" class="w-full h-full border-0" allow="autoplay"></iframe>
+        </div>
+      </div>
+
+      <!-- Collapsible logs -->
+      <div class="mt-6 mb-4">
+        <button id="log-toggle"
+          class="w-full flex items-center justify-between text-sm text-white/30 hover:text-white/60 transition py-2 border-t border-white/10">
+          <span id="log-toggle-label">Show generation logs</span>
+          <svg id="log-chevron" xmlns="http://www.w3.org/2000/svg" class="w-4 h-4 transition-transform duration-200" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+          </svg>
+        </button>
+        <div id="log-body" class="hidden mt-2">
+          <pre id="log-output" class="bg-white text-black p-4 h-64 overflow-y-scroll rounded font-mono text-xs shadow-inner whitespace-pre-wrap"></pre>
+          <div id="duration-display" class="text-white/30 text-xs mt-2 text-right hidden"></div>
+        </div>
+      </div>
+    </div>
+
   </main>
 
-
-  <!-- Footer -->
-  <footer class="text-center text-sm text-white mt-12 mb-6">
-    Contact <a href="mailto:gem.pinkney@multitudemedia.co.uk" class="underline">gem.pinkney@multitudemedia.co.uk</a> for any questions or queries.
+  <footer class="text-center text-sm text-white/40 pb-6">
+    Contact <a href="mailto:gem.pinkney@multitudemedia.co.uk" class="underline hover:text-white transition">gem.pinkney@multitudemedia.co.uk</a> for help.
   </footer>
+
   <script>
-    const logOutputContainer = document.getElementById("log-output-container"); // New reference
-    const logOutput = document.getElementById("log-output");
-    const linkDiv = document.getElementById("pdf-link");
-    const generateBtn = document.getElementById("generate-btn");
-    const selectedInfo = document.getElementById("selected-info");
-    const generateControls = document.getElementById("generate-controls");
-    const sheetCards = document.querySelectorAll(".sheet-card");
-    const undoBtn = document.getElementById("undo-btn");
-    const sheetContainer = document.getElementById("sheet-container");
-  
+    // Elements
+    const viewSelect      = document.getElementById("view-select");
+    const viewReady       = document.getElementById("view-ready");
+    const viewGenerating  = document.getElementById("view-generating");
+    const viewComplete    = document.getElementById("view-complete");
+    const globalBackBtn   = document.getElementById("global-back-btn");
+
+    const generateBtn         = document.getElementById("generate-btn");
+    const generateAgainBtn    = document.getElementById("generate-again-btn");
+    const editSheetBtn        = document.getElementById("edit-sheet-btn");
+    const editSheetCompleteBtn = document.getElementById("edit-sheet-complete-btn");
+    const editSheetCompleteLbl = document.getElementById("edit-sheet-complete-label");
+    const editSheetBtnLabel   = document.getElementById("edit-sheet-btn-label");
+    const backBtn             = document.getElementById("back-btn");
+    const backCompleteBtn     = document.getElementById("back-complete-btn");
+    const cancelBtn           = document.getElementById("cancel-btn");
+
+    const sheetEditor         = document.getElementById("sheet-editor");
+    const sheetIframe         = document.getElementById("sheet-iframe");
+    const sheetEditorComplete = document.getElementById("sheet-editor-complete");
+    const sheetIframeComplete = document.getElementById("sheet-iframe-complete");
+
+    const progressStatus = document.getElementById("progress-status");
+    const pdfPreview     = document.getElementById("pdf-preview");
+    const pdfDriveLink   = document.getElementById("pdf-drive-link");
+    const logOutput      = document.getElementById("log-output");
+    const logToggle      = document.getElementById("log-toggle");
+    const logToggleLabel = document.getElementById("log-toggle-label");
+    const logChevron     = document.getElementById("log-chevron");
+    const logBody        = document.getElementById("log-body");
+    const durationDisplay = document.getElementById("duration-display");
+
+    const sheetsData = {{ sheets | tojson }};
+    let sortMode = 'date';
+
+    function renderSheetList() {
+      const list = document.getElementById('sheet-list');
+      if (!list) return;
+      const q = (document.getElementById('sheet-search')?.value || '').toLowerCase();
+      let items = sheetsData.filter(s => s.name.toLowerCase().includes(q));
+      if (sortMode === 'name') items = [...items].sort((a, b) => a.name.localeCompare(b.name));
+
+      if (items.length === 0) {
+        list.innerHTML = '<div class="px-5 py-4 text-sm text-white/30">No sheets match your search.</div>';
+        return;
+      }
+      list.innerHTML = items.map(s => `
+        <div class="sheet-card flex items-center gap-4 px-5 py-4 cursor-pointer hover:bg-white/5 transition-colors duration-150"
+             data-sheet-id="${s.id}" data-sheet-name="${s.name.replace(/"/g,'&quot;')}">
+          <img src="https://www.svgrepo.com/show/504430/google-sheets.svg" class="w-6 h-6 flex-shrink-0 opacity-70" />
+          <div class="flex-1 min-w-0">
+            <div class="text-sm font-medium truncate">${s.name.replace(/</g,'&lt;')}</div>
+            <div class="text-xs text-white/30 mt-0.5">${s.modifiedTime}</div>
+          </div>
+          <div class="flex items-center gap-2 flex-shrink-0">
+            <a href="https://docs.google.com/spreadsheets/d/${s.id}/edit" target="_blank"
+               class="sheet-link p-2 rounded-lg border border-white/20 text-white/50 hover:text-white hover:border-white/60 hover:bg-white/5 transition" title="Open sheet">
+              <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5 pointer-events-none" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"/>
+              </svg>
+            </a>
+            <button class="sheet-generate p-2 rounded-lg border border-white/20 text-white/50 hover:text-white hover:border-white/60 hover:bg-white/5 transition" title="Generate facesheet"
+                    data-sheet-id="${s.id}" data-sheet-name="${s.name.replace(/"/g,'&quot;')}">
+              <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5 pointer-events-none" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14.752 11.168l-6.586-3.796A1 1 0 007 8.232v7.536a1 1 0 001.166.992l6.586-1.32A1 1 0 0016 14.42v-1.84a1 1 0 00-.748-.972l-.5-.44z"/>
+              </svg>
+            </button>
+          </div>
+        </div>`).join('');
+    }
+
+    renderSheetList();
+
+    document.getElementById('sheet-search')?.addEventListener('input', renderSheetList);
+
+    document.getElementById('sort-btn')?.addEventListener('click', () => {
+      sortMode = sortMode === 'date' ? 'name' : 'date';
+      document.getElementById('sort-label').textContent = sortMode === 'date' ? 'Date' : 'Name';
+      renderSheetList();
+    });
+
+    document.getElementById('sheet-list')?.addEventListener('click', e => {
+      const link = e.target.closest('.sheet-link');
+      if (link) return;
+
+      const genBtn = e.target.closest('.sheet-generate');
+      if (genBtn) {
+        e.stopPropagation();
+        startGeneration(genBtn.dataset.sheetId, genBtn.dataset.sheetName);
+        return;
+      }
+
+      const card = e.target.closest('.sheet-card');
+      if (card) selectSheet(card.dataset.sheetId, card.dataset.sheetName);
+    });
+
+    function selectSheet(id, name) {
+      selectedSheetId = id;
+      selectedSheetName = name;
+      document.getElementById("selected-sheet-title").textContent = name;
+      document.getElementById("sheet-iframe").src = `https://docs.google.com/spreadsheets/d/${id}/edit?embedded=true`;
+      generateBtn.disabled = false;
+      showView("ready");
+    }
+
+    function startGeneration(id, name) {
+      selectedSheetId = id;
+      selectedSheetName = name;
+      resetSheetEditor();
+      showView("generating");
+      progressStatus.textContent = "Generating your facesheet...";
+      lastLog = "";
+      logOutput.textContent = "";
+      pdfPreview.src = "";
+      durationDisplay.classList.add("hidden");
+      logBody.classList.add("hidden");
+      logExpanded = false;
+
+      generateAbortController = new AbortController();
+      fetch("/generate", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ sheet_id: id, sheet_name: name }),
+        signal: generateAbortController.signal
+      }).catch(() => {});
+
+      if (pollInterval) clearInterval(pollInterval);
+      pollInterval = setInterval(pollLogs, 2000);
+    }
+
     let pollInterval = null;
+    let generateAbortController = null;
     let lastLog = "";
     let selectedSheetId = null;
     let selectedSheetName = null;
-  
-    function selectSheet(id, name, cardElement) {
-      selectedSheetId = id;
-      selectedSheetName = name;
+    let sheetEditorOpen = false;
+    let sheetEditorCompleteOpen = false;
+    let logExpanded = false;
 
-      // Replace grid with flex layout to center selected card
-      const sheetContainer = document.getElementById("sheet-container");
-      sheetContainer.classList.remove("grid", "grid-cols-1", "sm:grid-cols-2", "lg:grid-cols-3", "place-items-center");
-      sheetContainer.classList.add("flex", "flex-col", "items-center", "gap-6");
-
-      // Hide all cards except selected one
-      sheetCards.forEach(card => {
-        if (card !== cardElement) {
-          card.classList.add("hidden");
-        } else {
-          card.classList.add("selected", "ring-2", "ring-black");
-          cardElement.classList.remove("cursor-pointer");
-        }
-      });
-
-      // Show buttons
-      generateBtn.disabled = false;
-      generateControls.classList.remove("hidden");
+    function showView(name) {
+      [viewSelect, viewReady, viewGenerating, viewComplete].forEach(v => v.classList.add("hidden"));
+      document.getElementById("view-" + name).classList.remove("hidden");
+      globalBackBtn.classList.toggle("hidden", name === "select");
     }
-  
-    function undoSelection() {
+
+function resetSheetEditor() {
+      document.getElementById("sheet-iframe").src = "";
+      sheetEditorComplete.classList.add("hidden");
+      sheetIframeComplete.src = "";
+      sheetEditorCompleteOpen = false;
+      editSheetCompleteLbl.textContent = "Edit Spreadsheet";
+    }
+
+    function goBack() {
+      if (pollInterval) clearInterval(pollInterval);
       selectedSheetId = null;
       selectedSheetName = null;
-
-      // Restore grid layout
-      const sheetContainer = document.getElementById("sheet-container");
-      sheetContainer.classList.remove("flex", "flex-col", "items-center", "gap-6");
-      sheetContainer.classList.add("grid", "grid-cols-1", "sm:grid-cols-2", "lg:grid-cols-3", "place-items-center", "gap-6");
-
-      // Show all cards again
-      sheetCards.forEach(card => {
-        card.classList.remove("hidden", "selected", "ring-2", "ring-black");
-        card.classList.add("hover:border-black");
-      });
-
-      // Hide buttons
-      generateBtn.disabled = true;
-      generateControls.classList.add("hidden");
-
-      // Hide log output and PDF link
-      logOutputContainer.classList.add("hidden");
-      linkDiv.classList.add("hidden");
-      linkDiv.classList.remove("opacity-100");
-      if (pollInterval) clearInterval(pollInterval); // Stop polling if undoing
+      resetSheetEditor();
+      logOutput.textContent = "";
+      logBody.classList.add("hidden");
+      logExpanded = false;
+      logChevron.style.transform = "";
+      logToggleLabel.textContent = "Show generation logs";
+      durationDisplay.classList.add("hidden");
+      pdfPreview.src = "";
+      pdfDriveLink.href = "#";
+      lastLog = "";
+      showView("select");
     }
 
-  
+
+    function cancelGeneration() {
+      if (pollInterval) clearInterval(pollInterval);
+      if (generateAbortController) { generateAbortController.abort(); generateAbortController = null; }
+      progressStatus.textContent = "Generating your facesheet...";
+      lastLog = "";
+      logOutput.textContent = "";
+      document.getElementById("sheet-iframe").src = `https://docs.google.com/spreadsheets/d/${selectedSheetId}/edit?embedded=true`;
+      showView("ready");
+    }
+
+    globalBackBtn.addEventListener("click", goBack);
+    cancelBtn.addEventListener("click", cancelGeneration);
+
+    // Generate
+    generateBtn.addEventListener("click", () => {
+      if (!selectedSheetId) return;
+      startGeneration(selectedSheetId, selectedSheetName);
+    });
+
+    // Generate again (stay on same sheet)
+    generateAgainBtn.addEventListener("click", () => {
+      startGeneration(selectedSheetId, selectedSheetName);
+    });
+
+    // Edit spreadsheet (ready view)
+    editSheetBtn.addEventListener("click", () => {
+      sheetEditorOpen = !sheetEditorOpen;
+      sheetEditor.classList.toggle("hidden", !sheetEditorOpen);
+      sheetIframe.src = sheetEditorOpen ? `https://docs.google.com/spreadsheets/d/${selectedSheetId}/edit?embedded=true` : "";
+      editSheetBtnLabel.textContent = sheetEditorOpen ? "Hide Spreadsheet" : "Edit Spreadsheet";
+    });
+
+    // Edit spreadsheet (complete view)
+    editSheetCompleteBtn.addEventListener("click", () => {
+      sheetEditorCompleteOpen = !sheetEditorCompleteOpen;
+      sheetEditorComplete.classList.toggle("hidden", !sheetEditorCompleteOpen);
+      sheetIframeComplete.src = sheetEditorCompleteOpen ? `https://docs.google.com/spreadsheets/d/${selectedSheetId}/edit?embedded=true` : "";
+      editSheetCompleteLbl.textContent = sheetEditorCompleteOpen ? "Hide Spreadsheet" : "Edit Spreadsheet";
+    });
+
+    // Log toggle
+    logToggle.addEventListener("click", () => {
+      logExpanded = !logExpanded;
+      logBody.classList.toggle("hidden", !logExpanded);
+      logChevron.style.transform = logExpanded ? "rotate(180deg)" : "";
+      logToggleLabel.textContent = logExpanded ? "Hide generation logs" : "Show generation logs";
+    });
+
+    // Prevent parent page scroll while cursor is inside an embedded sheet iframe
+    [sheetIframe, sheetIframeComplete].forEach(iframe => {
+      const wrapper = iframe.parentElement;
+      wrapper.addEventListener('mouseenter', () => { document.body.style.overflow = 'hidden'; });
+      wrapper.addEventListener('mouseleave', () => { document.body.style.overflow = ''; });
+    });
+
     function pollLogs() {
       fetch("/logs")
         .then(res => res.ok ? res.text() : "")
         .then(text => {
-          if (text && text !== lastLog) {
-            lastLog = text;
-            logOutput.textContent = text;
-            logOutput.scrollTop = logOutput.scrollHeight;
+          if (!text || text === lastLog) return;
+          lastLog = text;
+          logOutput.textContent = text;
 
-            const match = text.match(/https:\/\/drive\.google\.com\/file\/d\/[a-zA-Z0-9_-]+\/view/);
-            if (match) {
-              linkDiv.innerHTML = `
-                <a href="${match[0]}" target="_blank"
-                  class="group inline-flex items-center gap-2 px-5 py-2 border border-white text-white hover:bg-white hover:text-black rounded-xl transition-all duration-300 ease-in-out font-medium shadow-lg">
-                  <span>📄 View PDF</span>
-                  <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4 transition-transform group-hover:translate-x-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7l5 5m0 0l-5 5m5-5H6" />
-                  </svg>
-                </a>`;
-              linkDiv.classList.remove("hidden");
-              linkDiv.classList.add("opacity-100");
-              generateBtn.disabled = false;
-              undoBtn.classList.remove("hidden");
-              clearInterval(pollInterval);
-            }
+          // Show latest line as status (skip memory lines)
+          const lines = text.trim().split("\n").filter(l => l.trim() && !l.startsWith("🧠"));
+          if (lines.length) {
+            progressStatus.textContent = lines[lines.length - 1].replace(/^[\W]+/, "").trim();
+          }
 
-            const durationMatch = text.match(/All done in (\d+(\.\d+)?) seconds/);
-            if (durationMatch) {
-              const durationSec = durationMatch[1];
-              let durationDisplay = document.getElementById("duration-display");
-              if (!durationDisplay) {
-                durationDisplay = document.createElement("div");
-                durationDisplay.id = "duration-display";
-                durationDisplay.className = "text-white text-sm mt-4 text-right";
-                logOutput.parentNode.appendChild(durationDisplay);
-              }
-              durationDisplay.textContent = `⏱ Took ${durationSec} seconds`;
-            }
+          const match = text.match(/https:\/\/drive\.google\.com\/file\/d\/([a-zA-Z0-9_-]+)\/view/);
+          if (match) {
+            const fileId = match[1];
+            pdfDriveLink.href = `https://drive.google.com/file/d/${fileId}/view`;
+            pdfPreview.src = `https://drive.google.com/file/d/${fileId}/preview`;
+            showView("complete");
+            clearInterval(pollInterval);
+            window.scrollTo({ top: 0, behavior: "smooth" });
+          }
+
+          const durationMatch = text.match(/All done in (\d+(\.\d+)?) seconds/);
+          if (durationMatch) {
+            durationDisplay.textContent = `⏱ Took ${durationMatch[1]} seconds`;
+            durationDisplay.classList.remove("hidden");
           }
         })
         .catch(err => console.error("Polling error:", err));
     }
-  
-    generateBtn.addEventListener("click", () => {
-      if (!selectedSheetId) return;
-  
-      logOutputContainer.classList.remove("hidden"); // Make log output visible
-      logOutput.textContent = "⚙️ Starting generation...\n";
-      linkDiv.classList.add("hidden");
-      linkDiv.classList.remove("opacity-100");
-      lastLog = "";
-      generateBtn.disabled = true;
-      undoBtn.classList.add("hidden");
-
-      const oldDuration = document.getElementById("duration-display");
-      if (oldDuration) oldDuration.remove();
-
-      fetch("/generate", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          sheet_id: selectedSheetId,
-          sheet_name: selectedSheetName
-        })
-      });
-  
-      if (pollInterval) clearInterval(pollInterval);
-      pollInterval = setInterval(pollLogs, 2000);
-    });
-  
-    undoBtn.addEventListener("click", undoSelection);
-  
-    // Bind card clicks
-    sheetCards.forEach(card => {
-      card.addEventListener("click", function () {
-        const id = card.dataset.sheetId;
-        const name = card.dataset.sheetName;
-        if (!selectedSheetId) {
-          selectSheet(id, name, card);
-        }
-      });
-    });
-  </script>  
+  </script>
 </body>
 </html>

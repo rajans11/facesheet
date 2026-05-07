@@ -2,20 +2,17 @@ import os
 import sys
 from playwright.sync_api import sync_playwright
 
-from logger import log_message
+from logger import log_message, log_mem
 
 def convert_html_to_pdf(html_in, pdf_out, pdf_size, top_margin, bottom_margin):
     max_retries = 3
     retry_delay = 10
-    
+
     def are_all_images_loaded(page):
         return page.evaluate("""
             new Promise(resolve => {
                 const images = Array.from(document.querySelectorAll('img[src*="lh3.googleusercontent.com/d/"]'));
-                if (images.length === 0) {
-                    resolve(true);
-                    return;
-                }
+                if (images.length === 0) { resolve(true); return; }
                 let loaded = true;
                 images.forEach(img => {
                     if (!(img.complete && img.naturalWidth > 0 && img.naturalHeight > 0)) {
@@ -27,47 +24,54 @@ def convert_html_to_pdf(html_in, pdf_out, pdf_size, top_margin, bottom_margin):
         """)
 
     try:
-        with sync_playwright() as p:
-            browser = p.chromium.launch(
+        with sync_playwright() as pw:
+            browser = pw.chromium.launch(
                 headless=True,
                 args=["--no-sandbox", "--disable-dev-shm-usage"]
             )
-            page = browser.new_page()
+            log_message("🌐 Chromium browser started.")
+            log_mem("after browser ready")
+            try:
+                page = browser.new_page()
+                try:
+                    abs_html_path = f"file://{os.path.abspath(html_in)}"
+                    page.goto(abs_html_path, wait_until="load", timeout=30000)
+                    log_mem("after page load")
+                    page.evaluate('window.scrollTo(0, document.body.scrollHeight)')
+                    page.wait_for_timeout(1000)
 
-            abs_html_path = f"file://{os.path.abspath(html_in)}"
-            page.goto(abs_html_path, wait_until="load", timeout=30000)
-            page.evaluate('window.scrollTo(0, document.body.scrollHeight)')
-            page.wait_for_timeout(1000)
+                    for attempt in range(max_retries + 1):
+                        all_loaded = are_all_images_loaded(page)
+                        if all_loaded:
+                            if attempt == 0:
+                                log_message("✅ All Google Drive images loaded")
+                            else:
+                                log_message(f"✅ All Google Drive images loaded after {attempt} attempts.")
+                            break
+                        elif attempt < max_retries:
+                            log_message(f"⚠️ Not all Google Drive images loaded. Retrying in {retry_delay} seconds (Attempt {attempt + 1}/{max_retries + 1})...")
+                            page.wait_for_timeout(retry_delay * 1000)
+                        else:
+                            log_message("❌ Max retries reached. Some Google Drive images may not be loaded.")
 
-            for attempt in range(max_retries + 1):
-                all_loaded = are_all_images_loaded(page)
-                if all_loaded:
-                    if attempt == 0:
-                        log_message(f"✅ All Google Drive images loaded")
+                    log_mem("before pdf render")
+                    abs_pdf_path = os.path.abspath(pdf_out)
+                    page.pdf(
+                        path=abs_pdf_path,
+                        format=pdf_size,
+                        margin={"top": top_margin, "bottom": bottom_margin}
+                    )
+                    log_mem("after pdf render")
+
+                    if os.path.exists(abs_pdf_path):
+                        log_message(f"✅ PDF successfully created at: {abs_pdf_path}")
                     else:
-                        log_message(f"✅ All Google Drive images loaded after {attempt} attempts.")
-                    break
-                elif attempt < max_retries:
-                    log_message(f"⚠️ Not all Google Drive images loaded. Retrying in {retry_delay} seconds (Attempt {attempt + 1}/{max_retries + 1})...")
-                    page.wait_for_timeout(retry_delay * 1000)
-                else:
-                    log_message("❌ Max retries reached. Some Google Drive images may not be loaded.")
-
-
-            abs_pdf_path = os.path.abspath(pdf_out)
-            page.pdf(
-                path=abs_pdf_path,
-                format=pdf_size,
-                margin={"top": top_margin, "bottom": bottom_margin}
-            )
-
-            if os.path.exists(abs_pdf_path):
-                log_message(f"✅ PDF successfully created at: {abs_pdf_path}")
-            else:
-                log_message("❌ PDF file was not created.")
-                raise FileNotFoundError(f"PDF not created: {abs_pdf_path}")
-
-            browser.close()
+                        log_message("❌ PDF file was not created.")
+                        raise FileNotFoundError(f"PDF not created: {abs_pdf_path}")
+                finally:
+                    page.close()
+            finally:
+                browser.close()
 
     except Exception as e:
         log_message(f"🔥 Top-level error in PDF generation: {e}")

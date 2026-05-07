@@ -6,7 +6,7 @@ from dotenv import load_dotenv
 from jinja2 import Environment, FileSystemLoader
 
 from pdf import convert_html_to_pdf
-from logger import log_message
+from logger import log_message, log_mem
 from config import IS_PRODUCTION, PARENT_FOLDER, TEMPLATE_DIR
 from google_auth_helper import get_sheet
 from images_helper import initialize_image_index, check_image_exists
@@ -29,20 +29,25 @@ def return_response(payload):
 # === Main Workflow ===
 def generate(email, sheet_id):
     log_message(f"👤 Starting generation for {email} using sheet ID: {sheet_id}")
+    log_mem("start")
     try:
         sheet = get_sheet(sheet_id)
         log_message(f"📄 Using Google Sheet: '{sheet.title}'")
+        log_mem("after get_sheet")
 
         OUTPUT_HTML = f"{sheet.title}.html"
         OUTPUT_PDF = f"{sheet.title}.pdf"
 
         settings_data, size, top, bottom, logo_name = fetch_pdf_config_settings(sheet)
         log_message("⚙️ PDF Config settings fetched.")
-        
+        log_mem("after fetch_pdf_config")
+
         initialize_image_index(PARENT_FOLDER)
+        log_mem("after image_index")
 
         grouped_people = generate_grouped_people(sheet)
         log_message(f"🧑‍🤝‍🧑 Grouped data for {len(grouped_people)} groups.")
+        log_mem("after grouped_people")
 
         logo_path = check_image_exists(logo_name)
         log_message(f"🖼️ Logo path: {logo_path}")
@@ -59,11 +64,14 @@ def generate(email, sheet_id):
         with open(OUTPUT_HTML, 'w', encoding='utf-8') as f:
             f.write(html)
         log_message(f"✍️ HTML written to: {OUTPUT_HTML}")
+        log_mem("after html render")
 
         log_message("🚧 Starting PDF generation...")
         convert_html_to_pdf(OUTPUT_HTML, OUTPUT_PDF, size, top, bottom)
+        log_mem("after pdf generation")
 
         file_id, file_link = upload_or_replace_file(OUTPUT_PDF, OUTPUT_PDF, PARENT_FOLDER)
+        log_mem("after upload")
 
         payload = {"result": "Success", "pdf_link": file_link}
         if not IS_PRODUCTION:

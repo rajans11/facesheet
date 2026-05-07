@@ -26,7 +26,8 @@ def load_env_to_dict():
     return env_vars
 
 def generate_env_yaml(env_vars):
-    for key in ['PORT', 'USER_EMAIL']:
+    env_vars = dict(env_vars)
+    for key in ['PORT', 'USER_EMAIL', 'PROJECT_ID', 'REGION', 'IMAGE_NAME', 'OAUTH_REDIRECT_URIS']:
         env_vars.pop(key, None)
 
     env_vars['ENVIRONMENT'] = 'production'
@@ -68,8 +69,10 @@ def build_push_and_deploy(env_vars):
         f"--platform managed "
         f"--allow-unauthenticated "
         f"--project {project_id} "
-        f"--memory 4G "
-        f"--cpu 2 "
+        f"--memory 8G "
+        f"--cpu 4 "
+        f"--min-instances 1 "
+        f"--concurrency 1 "
         f"--service-account {env_vars['SERVICE_ACCOUNT_EMAIL']} "
         f"--env-vars-file={os.path.join(DEPLOY_DIR, 'env.yaml')}"
     )

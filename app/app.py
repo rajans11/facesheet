@@ -1,8 +1,11 @@
 import os
-import shutil
 from datetime import timedelta
 import time
 from dotenv import load_dotenv
+
+# === Load environment variables BEFORE app imports ===
+if os.getenv("ENVIRONMENT", "development") != "production":
+    load_dotenv()
 
 from flask import Flask, render_template, session, request, redirect, url_for, jsonify, send_file
 from flask_session import Session
@@ -16,24 +19,21 @@ from sheet import list_google_sheets
 from datetime_helper import format_datetime
 from core import app
 
-# === Load environment variables ===
-if not IS_PRODUCTION:
-    load_dotenv()
-
 app.config['BASE_URL'] = BASE_URL
 app.secret_key = os.getenv("SECRET_KEY", "fallback-dev-key")
 
 # === Session Setup ===
-SESSION_FOLDER = os.path.join(os.getcwd(), 'flask_session')
-if os.path.exists(SESSION_FOLDER):
-    shutil.rmtree(SESSION_FOLDER)
+# Cloud Run only guarantees /tmp is writable; use it unconditionally in production
+SESSION_FOLDER = '/tmp/flask_session' if IS_PRODUCTION else os.path.join(os.getcwd(), 'flask_session')
 os.makedirs(SESSION_FOLDER, exist_ok=True)
 
 app.config.update({
     'SESSION_TYPE': 'filesystem',
     'SESSION_FILE_DIR': SESSION_FOLDER,
     'SESSION_PERMANENT': True,
-    'PERMANENT_SESSION_LIFETIME': timedelta(days=7)
+    'PERMANENT_SESSION_LIFETIME': timedelta(days=7),
+    'SESSION_COOKIE_SAMESITE': 'Lax',
+    'SESSION_COOKIE_SECURE': IS_PRODUCTION,
 })
 Session(app)
 

@@ -4,8 +4,11 @@ from googleapiclient.discovery import build
 from google.auth import impersonated_credentials, default as google_auth_default
 from config import IS_PRODUCTION
 
-SERVICE_ACCOUNT_EMAIL = os.getenv("SERVICE_ACCOUNT_EMAIL")
-PARENT_FOLDER = os.getenv("PARENT_FOLDER")
+def _get_service_account_email():
+    return os.getenv("SERVICE_ACCOUNT_EMAIL")
+
+def _get_parent_folder():
+    return os.getenv("PARENT_FOLDER")
 
 # Scopes
 SCOPES_FULL = ["https://www.googleapis.com/auth/drive"]
@@ -18,7 +21,7 @@ def get_credentials(scopes):
     if not IS_PRODUCTION:
         creds = impersonated_credentials.Credentials(
             source_credentials=creds,
-            target_principal=SERVICE_ACCOUNT_EMAIL,
+            target_principal=_get_service_account_email(),
             target_scopes=scopes,
             lifetime=3600
         )
@@ -44,7 +47,7 @@ def has_drive_access(email):
     try:
         service = get_drive_service(readonly=True)
         permissions = service.permissions().list(
-            fileId=PARENT_FOLDER,
+            fileId=_get_parent_folder(),
             fields="permissions(emailAddress, role)",
             supportsAllDrives=True
         ).execute()

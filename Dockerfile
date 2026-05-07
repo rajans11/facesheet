@@ -32,11 +32,11 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
  && rm -rf /var/lib/apt/lists/*
 
 # Copy and install Python dependencies
-COPY ../requirements.txt /app/
+COPY requirements.txt /app/
 RUN pip install --no-cache-dir -r requirements.txt
 
 # Install Playwright (with Chromium and all required deps)
-RUN python -m playwright install --with-deps
+RUN python -m playwright install chromium
 
 # Copy application code
 COPY app/ /app/
@@ -46,4 +46,4 @@ COPY templates/ /app/templates/
 EXPOSE 8080
 
 # Run app using Gunicorn
-CMD ["gunicorn", "-w", "6", "-b", "0.0.0.0:8080", "--timeout", "300", "app:app"]
+CMD ["gunicorn", "--workers", "1", "--worker-class", "gthread", "--threads", "8", "-b", "0.0.0.0:8080", "--timeout", "300", "app:app"]

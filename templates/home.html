@@ -28,6 +28,13 @@
       </svg>
       Back
     </button>
+    <button id="open-image-search"
+      class="absolute top-6 right-6 inline-flex items-center gap-2 text-sm font-medium text-white bg-white/10 border border-white/40 px-4 py-2 rounded-lg hover:bg-white hover:text-black hover:border-white transition">
+      <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/>
+      </svg>
+      Search Images
+    </button>
     <a href="https://www.multitudemedia.co.uk/">
       <img src="https://cdn.prod.website-files.com/637fa47ef7a2b2f6f809adb2/63eb5a3da5edc01d53e61edf_mm-reversed.svg"
         alt="Multitude Media Logo" class="h-20" style="filter: brightness(0) invert(1);" />
@@ -70,6 +77,25 @@
             <img src="https://kodular-community.s3.dualstack.eu-west-1.amazonaws.com/original/3X/3/b/3b1cb1d1842e4ecba35ba52e22c3b808d6bddde5.jpeg" class="w-4 h-4">
           </a>
         </div>
+
+        <!-- Image search banner -->
+        <button onclick="document.getElementById('open-image-search').click()"
+          class="mt-4 w-full flex items-center justify-between gap-4 px-5 py-4 rounded-xl border border-white/10 bg-white/3 hover:bg-white/8 hover:border-white/20 transition text-left group">
+          <div class="flex items-center gap-4">
+            <div class="w-9 h-9 rounded-lg bg-white/10 flex items-center justify-center flex-shrink-0 group-hover:bg-white/20 transition">
+              <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5 text-white/70" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/>
+              </svg>
+            </div>
+            <div>
+              <p class="text-sm font-medium text-white">Search for photos</p>
+              <p class="text-xs text-white/40 mt-0.5">Find an image on the web and save it directly to Drive</p>
+            </div>
+          </div>
+          <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4 text-white/30 flex-shrink-0 group-hover:text-white/60 transition" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
+          </svg>
+        </button>
 
         <!-- List -->
         <div id="sheet-list" class="mt-3 flex flex-col divide-y divide-white/10 border border-white/10 rounded-xl overflow-hidden"></div>
@@ -175,6 +201,68 @@
   <footer class="text-center text-sm text-white/40 pb-6">
     Contact <a href="mailto:gem.pinkney@multitudemedia.co.uk" class="underline hover:text-white transition">gem.pinkney@multitudemedia.co.uk</a> for help.
   </footer>
+
+  <!-- Image Search Modal -->
+  <div id="image-search-modal" class="hidden fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm p-4">
+    <div class="bg-zinc-900 border border-white/10 rounded-2xl w-full max-w-3xl flex flex-col shadow-2xl" style="max-height:90vh">
+
+      <!-- Modal header -->
+      <div class="flex items-center justify-between px-6 py-4 border-b border-white/10 flex-shrink-0">
+        <div class="flex items-center gap-4">
+          <h3 class="text-sm font-semibold">Search Images</h3>
+          <a id="images-folder-link" href="#" target="_blank"
+            class="hidden inline-flex items-center gap-1 text-xs text-white/40 hover:text-white/70 transition">
+            <svg xmlns="http://www.w3.org/2000/svg" class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 7a2 2 0 012-2h4l2 2h6a2 2 0 012 2v7a2 2 0 01-2 2H5a2 2 0 01-2-2V7z"/>
+            </svg>
+            Images folder
+          </a>
+        </div>
+        <button id="close-image-modal" class="text-white/40 hover:text-white transition">
+          <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+          </svg>
+        </button>
+      </div>
+
+      <!-- Search bar -->
+      <div class="px-6 py-4 flex gap-2 flex-shrink-0">
+        <input id="image-search-input" type="text" placeholder="Search by name, e.g. Jane Smith…"
+          class="flex-1 bg-white/5 border border-white/10 rounded-lg px-4 py-2 text-sm text-white placeholder-white/20 focus:outline-none focus:border-white/30 transition"/>
+        <button id="image-search-btn"
+          class="bg-white text-black px-5 py-2 rounded-lg text-sm font-semibold hover:bg-white/90 transition whitespace-nowrap">
+          Search
+        </button>
+      </div>
+
+      <!-- Results grid -->
+      <div id="image-results-wrap" class="flex-1 overflow-y-auto px-6 pb-2 min-h-0">
+        <div id="image-search-results" class="grid grid-cols-4 gap-3">
+          <div id="image-search-placeholder" class="col-span-4 flex items-center justify-center py-16 text-white/30 text-sm">
+            Enter a name above to search for images
+          </div>
+        </div>
+      </div>
+
+      <!-- Save bar (shown after selecting an image) -->
+      <div id="image-save-bar" class="hidden px-6 py-4 border-t border-white/10 flex items-center gap-3 flex-shrink-0">
+        <img id="image-save-preview" src="" alt="" class="w-12 h-12 rounded-lg object-cover flex-shrink-0 border border-white/10"/>
+        <div class="flex-1 flex flex-col gap-1">
+          <input id="image-save-name" type="text" placeholder="Exact name from spreadsheet (e.g. Jane Smith)"
+            class="w-full bg-white/5 border border-white/10 rounded-lg px-3 py-2 text-sm text-white placeholder-white/30 focus:outline-none focus:border-white/30 transition"/>
+          <p class="text-xs text-white/30">Must match the name in your spreadsheet — spaces become underscores, JPEG/PNG only</p>
+        </div>
+        <div class="flex flex-col items-end gap-1 flex-shrink-0">
+          <button id="image-save-btn"
+            class="bg-white text-black px-4 py-2 rounded-lg text-sm font-semibold hover:bg-white/90 transition whitespace-nowrap disabled:opacity-40">
+            Save to Drive
+          </button>
+          <span id="image-save-status" class="hidden text-xs"></span>
+        </div>
+      </div>
+
+    </div>
+  </div>
 
   <script>
     // Elements
@@ -435,6 +523,187 @@ function resetSheetEditor() {
         })
         .catch(err => console.error("Polling error:", err));
     }
+  </script>
+  <script>
+    (function () {
+      const modal        = document.getElementById('image-search-modal');
+      const closeBtn     = document.getElementById('close-image-modal');
+      const searchInput  = document.getElementById('image-search-input');
+      const searchBtn    = document.getElementById('image-search-btn');
+      const resultsGrid  = document.getElementById('image-search-results');
+      const saveBar      = document.getElementById('image-save-bar');
+      const savePreview  = document.getElementById('image-save-preview');
+      const saveName     = document.getElementById('image-save-name');
+      const saveBtn      = document.getElementById('image-save-btn');
+      const saveStatus   = document.getElementById('image-save-status');
+
+      let selectedUrl = null;
+      let folderUrlFetched = false;
+
+      document.getElementById('open-image-search').addEventListener('click', () => {
+        modal.classList.remove('hidden');
+        searchInput.focus();
+        if (!folderUrlFetched) {
+          folderUrlFetched = true;
+          fetch('/images-folder')
+            .then(r => r.json())
+            .then(d => {
+              if (d.url) {
+                const link = document.getElementById('images-folder-link');
+                link.href = d.url;
+                link.classList.remove('hidden');
+              }
+            })
+            .catch(() => {});
+        }
+      });
+
+      closeBtn.addEventListener('click', () => modal.classList.add('hidden'));
+      modal.addEventListener('click', e => { if (e.target === modal) modal.classList.add('hidden'); });
+      document.addEventListener('keydown', e => {
+        if (e.key === 'Escape' && !modal.classList.contains('hidden')) modal.classList.add('hidden');
+      });
+      searchInput.addEventListener('keydown', e => { if (e.key === 'Enter') runSearch(); });
+      searchBtn.addEventListener('click', runSearch);
+
+      async function runSearch() {
+        const q = searchInput.value.trim();
+        if (!q) return;
+
+        searchBtn.disabled = true;
+        searchBtn.textContent = 'Searching…';
+        resultsGrid.innerHTML = `<div class="col-span-4 py-16 flex flex-col items-center justify-center gap-3">
+          <svg class="w-6 h-6 text-white/40 animate-spin" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8z"></path>
+          </svg>
+          <span class="text-white/30 text-sm">Searching…</span>
+        </div>`;
+        saveBar.classList.add('hidden');
+        selectedUrl = null;
+
+        try {
+          const res = await fetch('/image-search?q=' + encodeURIComponent(q));
+          const data = await res.json();
+          if (!res.ok) throw new Error(data.error || 'Search failed');
+          if (!data.length) {
+            resultsGrid.innerHTML = '<div class="col-span-4 py-16 text-center text-white/30 text-sm">No results found</div>';
+            return;
+          }
+          renderResults(data, q);
+        } catch (err) {
+          resultsGrid.innerHTML = `<div class="col-span-4 py-16 text-center text-red-400/70 text-sm">${err.message}</div>`;
+        } finally {
+          searchBtn.disabled = false;
+          searchBtn.textContent = 'Search';
+        }
+      }
+
+      function guessExt(url) {
+        try {
+          const m = new URL(url).pathname.match(/\.(jpe?g|png)(\?|$)/i);
+          if (m) return m[1].toLowerCase() === 'jpeg' ? '.jpg' : '.' + m[1].toLowerCase();
+        } catch {}
+        return '.jpg';
+      }
+
+      function renderResults(images, query) {
+        resultsGrid.innerHTML = images.map(img => `
+          <div class="img-result cursor-pointer rounded-lg overflow-hidden border-2 border-transparent hover:border-white/40 transition-all"
+               data-url="${escAttr(img.url)}" data-thumb="${escAttr(img.thumbnail)}">
+            <div class="aspect-square bg-white/5 relative">
+              <img src="${escAttr(img.thumbnail)}" alt="${escAttr(img.name)}"
+                class="w-full h-full object-cover"
+                onerror="this.closest('.img-result').style.display='none'"/>
+            </div>
+          </div>`).join('');
+
+        resultsGrid.querySelectorAll('.img-result').forEach(el => {
+          el.addEventListener('click', () => {
+            resultsGrid.querySelectorAll('.img-result').forEach(r => r.classList.remove('border-white'));
+            el.classList.add('border-white');
+            selectedUrl = el.dataset.url;
+            savePreview.src = el.dataset.thumb;
+            const ext = guessExt(selectedUrl);
+            saveName.value = query.replace(/ /g, '_') + ext;
+            overwriteConfirmed = false;
+            resetSaveStatus();
+            saveBar.classList.remove('hidden');
+          });
+        });
+      }
+
+      let overwriteConfirmed = false;
+
+      saveName.addEventListener('input', () => { overwriteConfirmed = false; resetSaveStatus(); saveBtn.textContent = 'Save to Drive'; });
+
+      saveBtn.addEventListener('click', async () => {
+        if (!selectedUrl) return;
+        const filename = saveName.value.trim();
+        if (!filename) {
+          showSaveStatus('Enter a filename', 'error');
+          return;
+        }
+
+        // Step 1: check existence (unless user already confirmed overwrite)
+        if (!overwriteConfirmed) {
+          saveBtn.disabled = true;
+          saveBtn.textContent = 'Checking…';
+          try {
+            const chk = await fetch('/image-check?filename=' + encodeURIComponent(filename));
+            const chkData = await chk.json();
+            if (chkData.exists) {
+              showSaveStatus(`"${chkData.existing_name}" already exists — click Save again to overwrite`, 'warn');
+              saveBtn.disabled = false;
+              saveBtn.textContent = 'Overwrite';
+              overwriteConfirmed = true;
+              return;
+            }
+          } catch {
+            // If check fails, proceed anyway
+          }
+        }
+
+        // Step 2: save
+        overwriteConfirmed = false;
+        saveBtn.disabled = true;
+        saveBtn.textContent = 'Saving…';
+        resetSaveStatus();
+
+        try {
+          const res = await fetch('/image-save', {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({url: selectedUrl, filename})
+          });
+          const data = await res.json();
+          if (!res.ok) throw new Error(data.error || 'Save failed');
+          showSaveStatus(`Saved as "${data.filename}"`, 'ok');
+          saveBtn.textContent = 'Saved!';
+        } catch (err) {
+          showSaveStatus(err.message, 'error');
+          saveBtn.disabled = false;
+          saveBtn.textContent = 'Save to Drive';
+        }
+      });
+
+      function showSaveStatus(msg, type) {
+        saveStatus.textContent = msg;
+        saveStatus.className = 'text-xs ' + (type === 'ok' ? 'text-green-400' : type === 'warn' ? 'text-yellow-400' : 'text-red-400');
+        saveStatus.classList.remove('hidden');
+      }
+
+      function resetSaveStatus() {
+        saveStatus.textContent = '';
+        saveStatus.classList.add('hidden');
+        saveBtn.disabled = false;
+        saveBtn.textContent = 'Save to Drive';
+      }
+
+      function escAttr(s) {
+        return (s || '').replace(/"/g, '&quot;').replace(/</g, '&lt;');
+      }
+    })();
   </script>
 </body>
 </html>

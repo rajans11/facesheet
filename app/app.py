@@ -18,6 +18,8 @@ from config import IS_PRODUCTION, BASE_URL, PORT, PARENT_FOLDER
 from sheet import list_google_sheets
 from datetime_helper import format_datetime
 from core import app
+from image_search import search_images, save_image_to_drive, check_filename_exists, get_images_folder_url
+from images_helper import clear_image_cache
 
 app.config['BASE_URL'] = BASE_URL
 app.secret_key = os.getenv("SECRET_KEY", "fallback-dev-key")
@@ -100,6 +102,62 @@ def generate_route():
         })
     except Exception as e:
         log_message(f"❌ Error during generation: {e}")
+        return jsonify({"error": str(e)}), 500
+
+
+@app.route("/images-folder")
+def images_folder_route():
+    if "email" not in session:
+        return jsonify({"error": "Not logged in"}), 403
+    try:
+        url = get_images_folder_url(PARENT_FOLDER)
+        return jsonify({"url": url})
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+
+@app.route("/image-check")
+def image_check_route():
+    if "email" not in session:
+        return jsonify({"error": "Not logged in"}), 403
+    filename = (request.args.get("filename") or "").strip()
+    if not filename:
+        return jsonify({"error": "Missing filename"}), 400
+    try:
+        exists, existing_name = check_filename_exists(filename, PARENT_FOLDER)
+        return jsonify({"exists": exists, "existing_name": existing_name})
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+
+@app.route("/image-search")
+def image_search_route():
+    if "email" not in session:
+        return jsonify({"error": "Not logged in"}), 403
+    q = request.args.get("q", "").strip()
+    if not q:
+        return jsonify({"error": "Missing query"}), 400
+    try:
+        results = search_images(q)
+        return jsonify(results)
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+
+@app.route("/image-save", methods=["POST"])
+def image_save_route():
+    if "email" not in session:
+        return jsonify({"error": "Not logged in"}), 403
+    data = request.json or {}
+    url = (data.get("url") or "").strip()
+    filename = (data.get("filename") or "").strip()
+    if not url or not filename:
+        return jsonify({"error": "Missing url or filename"}), 400
+    try:
+        file_id, saved_name = save_image_to_drive(url, filename, PARENT_FOLDER)
+        clear_image_cache()
+        return jsonify({"success": True, "filename": saved_name, "file_id": file_id})
+    except Exception as e:
         return jsonify({"error": str(e)}), 500
 
 

@@ -73,6 +73,12 @@ def initialize_image_index(PARENT_FOLDER_ID):
         _image_index = {}
 
 
+def clear_image_cache():
+    global _image_index, _index_built_at
+    _image_index = {}
+    _index_built_at = 0.0
+
+
 def check_image_exists(image_name):
     """Look up the image in the normalized index with common extensions."""
     norm_name = unicodedata.normalize('NFKD', image_name).lower()

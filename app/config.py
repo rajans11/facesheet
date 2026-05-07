@@ -5,6 +5,7 @@ ENVIRONMENT = os.getenv("ENVIRONMENT", "development")
 IS_PRODUCTION = ENVIRONMENT == "production"
 
 PARENT_FOLDER = os.getenv("PARENT_FOLDER")
+SERPAPI_KEY = os.getenv("SERPAPI_KEY", "")
 TEMPLATE_DIR = "templates"
 IMAGE_DRIVE_FOLDER_ID = os.getenv("IMAGE_DRIVE_FOLDER_ID")
 
